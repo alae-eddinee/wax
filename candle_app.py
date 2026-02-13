@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 # --- 1. SETUP & THEME CONFIGURATION ---
-st.set_page_config(page_title="Candle Cost Calculator", page_icon="", layout="wide")
+st.set_page_config(page_title="Calculateur de Coût de Bougies", page_icon="", layout="wide")
 
 # --- 2. DATA LOADING ---
 csv_data = """Item No,Product Name,Description,Quantity,Unit,Unit Price,Amount
@@ -48,62 +48,62 @@ wicks_df = df[df['Product Name'].str.contains("Wick") & ~df['Product Name'].str.
 sticker_row = df[df['Item No'] == 11].iloc[0]
 
 # --- 3. UI LAYOUT ---
-st.title("🕯️ Candle Cost Calculator")
+st.title("🕯️ Calculateur de Coût de Bougies")
 
 # --- SELECTION AREA ---
 col_sel1, col_sel2, col_sel3 = st.columns(3)
 
 with col_sel1:
-    st.subheader("1. Choose Wax")
-    wax_choice = st.selectbox("Wax Type", waxes_df['Product Name'].unique(), index=0)
+    st.subheader("1. Choisir la Cire")
+    wax_choice = st.selectbox("Type de Cire", waxes_df['Product Name'].unique(), index=0)
     wax_row = waxes_df[waxes_df['Product Name'] == wax_choice].iloc[0]
 
 with col_sel2:
-    st.subheader("2. Choose Fragrance")
-    # This selector lets you see the price and name
-    scent_choice_label = st.selectbox("Fragrance Oil", fragrances_df['Display Label'].unique(), index=0)
+    st.subheader("2. Choisir le Parfum")
+    # Ce sélecteur vous permet de voir le prix et le nom
+    scent_choice_label = st.selectbox("Huile Parfumée", fragrances_df['Display Label'].unique(), index=0)
     scent_row = fragrances_df[fragrances_df['Display Label'] == scent_choice_label].iloc[0]
 
 with col_sel3:
-    st.subheader("3. Choose Wick")
-    wick_choice = st.selectbox("Wick Size", wicks_df['Description'].unique())
+    st.subheader("3. Choisir la Mèche")
+    wick_choice = st.selectbox("Taille de Mèche", wicks_df['Description'].unique())
     wick_row = wicks_df[wicks_df['Description'] == wick_choice].iloc[0]
 
 st.divider()
 
 # --- FRAGRANCE LOAD SECTION ---
-st.subheader("⚙️ Settings: Fragrance Load")
-st.caption("How much oil to add to the wax?")
+st.subheader("⚙️ Paramètres : Charge en Parfum")
+st.caption("Quelle quantité d'huile ajouter à la cire ?")
 
 col_load_slider, col_load_info = st.columns([1, 1])
 
 with col_load_slider:
     fragrance_load = st.slider(
-        "Fragrance Percentage (%)", 
+        "Pourcentage de Parfum (%)", 
         min_value=1, 
         max_value=12, 
         value=6
     )
 
 with col_load_info:
-    # Logic to explain the percentage to the user
+    # Logique pour expliquer le pourcentage à l'utilisateur
     if fragrance_load < 6:
-        st.warning(f"⚠️ **{fragrance_load}% is Low.** The scent might be too weak.")
+        st.warning(f"⚠️ **{fragrance_load}% est Faible.** Le parfum pourrait être trop discret.")
     elif 6 <= fragrance_load <= 8:
-        st.success(f"✅ **{fragrance_load}% is Perfect.** (Recommended 6-8%). Good scent, burns well.")
+        st.success(f"✅ **{fragrance_load}% est Parfait.** (Recommandé 6-8%). Bon parfum, brûle bien.")
     elif 9 <= fragrance_load <= 10:
-        st.success(f"🔥 **{fragrance_load}% is Strong.** (Max recommended). Very strong scent.")
+        st.success(f"🔥 **{fragrance_load}% est Fort.** (Maximum recommandé). Parfum très intense.")
     else:
-        st.error(f"🛑 **{fragrance_load}% is Risky.** Over 10% can cause the oil to seep out of the candle.")
+        st.error(f"🛑 **{fragrance_load}% est Risqué.** Plus de 10% peut faire couler l'huile hors de la bougie.")
 
 # Jar Settings
 col_jar1, col_jar2, col_jar3 = st.columns(3)
 with col_jar1:
-    jar_size = st.number_input("Candle Jar Size (grams of wax)", value=200, step=10)
+    jar_size = st.number_input("Taille du Pot de Bougie (grammes de cire)", value=200, step=10)
 with col_jar2:
-    wax_amount_kg = st.number_input("Wax Amount (kg)", value=1.0, min_value=0.1, max_value=10.0, step=0.1)
+    wax_amount_kg = st.number_input("Quantité de Cire (kg)", value=1.0, min_value=0.1, max_value=10.0, step=0.1)
 with col_jar3:
-    include_sticker = st.checkbox("Include Wick Sticker cost?", value=True)
+    include_sticker = st.checkbox("Inclure le coût des autocollants de mèche ?", value=True)
 
 # --- CALCULATIONS ---
 WAX_AMOUNT_KG = wax_amount_kg
@@ -122,61 +122,61 @@ cost_per_candle = total_batch_cost / num_candles if num_candles > 0 else 0.0
 
 # --- RESULTS ---
 st.divider()
-st.markdown(f"### 📊 Results: {scent_row['Scent Name']}")
+st.markdown(f"### 📊 Résultats : {scent_row['Scent Name']}")
 
 m1, m2, m3, m4 = st.columns(4)
-m1.metric("Total Batch Cost", f"${total_batch_cost:.2f}")
-m2.metric("Cost Per Candle", f"${cost_per_candle:.2f}")
-m3.metric("Candles Produced", f"{num_candles}")
-m4.metric("Fragrance Used", f"{fragrance_weight_kg*1000:.0f} g")
+m1.metric("Coût Total du Lot", f"${total_batch_cost:.2f}")
+m2.metric("Coût par Bougie", f"${cost_per_candle:.2f}")
+m3.metric("Bougies Produites", f"{num_candles}")
+m4.metric("Parfum Utilisé", f"{fragrance_weight_kg*1000:.0f} g")
 
 # Breakdown Table
 breakdown_df = pd.DataFrame({
-    "Item": [wax_row['Product Name'], f"Oil: {scent_row['Scent Name']}", "Wicks", "Stickers"],
-    "Unit Price": [f"${wax_row['Unit Price']}/kg", f"${scent_row['Unit Price']}/kg", f"${wick_row['Unit Price']:.4f}/pc", f"${sticker_row['Unit Price']:.3f}/pc"],
-    "Quantity": [f"{WAX_AMOUNT_KG:.1f} kg", f"{fragrance_weight_kg*1000:.1f} g", f"{num_candles} pcs", f"{num_candles} pcs" if include_sticker else "0"],
-    "Cost": [f"${cost_wax:.2f}", f"${cost_fragrance:.2f}", f"${cost_wicks:.2f}", f"${cost_stickers:.2f}"]
+    "Article": [wax_row['Product Name'], f"Huile : {scent_row['Scent Name']}", "Mèches", "Autocollants"],
+    "Prix Unitaire": [f"${wax_row['Unit Price']}/kg", f"${scent_row['Unit Price']}/kg", f"${wick_row['Unit Price']:.4f}/pc", f"${sticker_row['Unit Price']:.3f}/pc"],
+    "Quantité": [f"{WAX_AMOUNT_KG:.1f} kg", f"{fragrance_weight_kg*1000:.1f} g", f"{num_candles} pcs", f"{num_candles} pcs" if include_sticker else "0"],
+    "Coût": [f"${cost_wax:.2f}", f"${cost_fragrance:.2f}", f"${cost_wicks:.2f}", f"${cost_stickers:.2f}"]
 })
 st.table(breakdown_df)
 
 # --- THE STEPS (RECIPE) ---
-st.markdown("## 📝 Making Guide (Steps)")
-st.caption("Based on the PDF Guide using Soy Wax")
+st.markdown("## 📝 Guide de Fabrication (Étapes)")
+st.caption("Basé sur le Guide PDF utilisant la Cire de Soja")
 
 # Using Expanders to organize the steps cleanly
-with st.expander("Step 1: Preparation (Before you start)", expanded=True):
+with st.expander("Étape 1 : Préparation (Avant de commencer)", expanded=True):
     st.markdown(f"""
-    1.  **Clean & Dry:** Ensure your **{num_candles}** containers are clean and dry.
-    2.  **Wick:** Attach the wick ({wick_row['Description']}) to the center of the container using a wick sticker or glue.
-    3.  **Secure:** Use a wick holder to keep the wick standing straight up.
+    1.  **Nettoyer & Sécher :** Assurez-vous que vos **{num_candles}** conteneurs sont propres et secs.
+    2.  **Mèche :** Attachez la mèche ({wick_row['Description']}) au centre du conteneur en utilisant un autocollant de mèche ou de la colle.
+    3.  **Fixer :** Utilisez un support de mèche pour maintenir la mèche droite.
     """)
 
-with st.expander("Step 2: Melting the Wax", expanded=True):
+with st.expander("Étape 2 : Fonte de la Cire", expanded=True):
     st.markdown(f"""
-    1.  **Weigh:** Measure out **{WAX_AMOUNT_KG*1000:.0f}g** of {wax_row['Product Name']}.
-    2.  **Melt:** Place wax in a double boiler or wax melter.
-    3.  **Heat:** Melt slowly. **Do NOT** heat directly over an open flame.
-    4.  **Stir:** Stir occasionally to ensure even melting.
+    1.  **Peser :** Mesurez **{WAX_AMOUNT_KG*1000:.0f}g** de {wax_row['Product Name']}.
+    2.  **Faire fondre :** Placez la cire dans un bain-marie ou un fontoir à cire.
+    3.  **Chauffer :** Faites fondre lentement. **NE PAS** chauffer directement sur une flamme nue.
+    4.  **Remuer :** Remuez de temps en temps pour assurer une fonte uniforme.
     """)
 
-with st.expander("Step 3: Adding Fragrance (Crucial Step)", expanded=True):
+with st.expander("Étape 3 : Ajout du Parfum (Étape Cruciale)", expanded=True):
     st.markdown(f"""
-    1.  **Cool Down:** Once melted, let the wax cool down to **60°C - 65°C**.
-    2.  **Measure:** Weigh out **{fragrance_weight_kg*1000:.1f}g** of **{scent_row['Scent Name']}**.
-    3.  **Mix:** Pour the oil into the wax.
-    4.  **Stir:** Stir gently but thoroughly for **2 minutes** to ensure the oil binds to the wax.
+    1.  **Refroidir :** Une fois fondue, laissez la cire refroidir à **60°C - 65°C**.
+    2.  **Mesurer :** Pesez **{fragrance_weight_kg*1000:.1f}g** de **{scent_row['Scent Name']}**.
+    3.  **Mélanger :** Versez l'huile dans la cire.
+    4.  **Remuer :** Remuez doucement mais soigneusement pendant **2 minutes** pour assurer que l'huile se lie à la cire.
     """)
 
-with st.expander("Step 4: Pouring", expanded=True):
+with st.expander("Étape 4 : Coulage", expanded=True):
     st.markdown("""
-    1.  **Cool Further:** Let the mixture cool down to **50°C - 55°C**. This helps get a smooth top.
-    2.  **Pour:** Slowly pour the wax into your containers.
-    3.  **Tap:** Gently tap the container to release any air bubbles.
+    1.  **Refroidir davantage :** Laissez le mélange refroidir à **50°C - 55°C**. Cela aide à obtenir une surface lisse.
+    2.  **Couler :** Versez lentement la cire dans vos conteneurs.
+    3.  **Tapoter :** Tapotez doucement le conteneur pour libérer les bulles d'air.
     """)
 
-with st.expander("Step 5: Cooling & Curing", expanded=True):
+with st.expander("Étape 5 : Refroidissement & Séchage", expanded=True):
     st.markdown("""
-    1.  **Rest:** Let the candles sit at room temperature (20°C - 25°C). Avoid drafts or AC.
-    2.  **Wait:** Allow to cool for at least **4-6 hours** (24 hours is best).
-    3.  **Trim:** Before lighting, trim the wick to about **0.6cm - 1.0cm**.
+    1.  **Reposer :** Laissez les bougies reposer à température ambiante (20°C - 25°C). Évitez les courants d'air ou la climatisation.
+    2.  **Attendre :** Laissez refroidir au moins **4-6 heures** (24 heures c'est idéal).
+    3.  **Couper :** Avant d'allumer, coupez la mèche à environ **0.6cm - 1.0cm**.
     """)
