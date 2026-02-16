@@ -46,6 +46,7 @@ fragrances_df['Display Label'] = fragrances_df['Scent Name'] + " ($" + fragrance
 waxes_df = df[df['Product Name'].str.contains("Wax") & ~df['Product Name'].str.contains("Melter|Cup")]
 waxes_df['Display Label'] = waxes_df['Product Name'] + " ($" + waxes_df['Unit Price'].astype(str) + "/kg)"
 wicks_df = df[df['Product Name'].str.contains("Wick") & ~df['Product Name'].str.contains("Holder|Sticker")]
+wicks_df['Display Label'] = wicks_df['Description'] + " ($" + wicks_df['Unit Price'].astype(str) + "/pc)"
 sticker_row = df[df['Item No'] == 11].iloc[0]
 STICKERS_PER_SHEET = 20
 
@@ -68,8 +69,8 @@ with col_sel2:
 
 with col_sel3:
     st.subheader("3. Choisir la Mèche")
-    wick_choice = st.selectbox("Taille de Mèche", wicks_df['Description'].unique())
-    wick_row = wicks_df[wicks_df['Description'] == wick_choice].iloc[0]
+    wick_choice_label = st.selectbox("Taille de Mèche", wicks_df['Display Label'].unique())
+    wick_row = wicks_df[wicks_df['Display Label'] == wick_choice_label].iloc[0]
 
 st.divider()
 
