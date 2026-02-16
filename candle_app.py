@@ -17,7 +17,7 @@ csv_data = """Item No,Product Name,Description,Quantity,Unit,Unit Price,Amount
 8,White Cotton Wicks,"Size: 24ply * 17cmL",10000,PIECE,0.0124,124.0
 9,White Cotton Wicks,"Size: 24ply * 20cmL",5000,PIECE,0.0165,82.5
 10,Metal Candle Wick Holder,"Material: Stainless steel, Size: 10cmL * 2.5cmW",1000,PIECE,0.112,112.0
-11,Candle Wick Sticker,"Double-sided, Dia 20mm, Color: White",1500,PIECE,0.071,106.5
+11,Candle Wick Sticker Sheet,"Double-sided, Dia 20mm, Color: White, 20 dots per sheet",1500,SHEET,0.071,106.5
 12,Wax Melting Cup,"Material: 304 Stainless steel, 550ml",5,PIECE,3.5,17.5
 13,Heat Gun,"Color: Black/White, 230V, 300W",5,PIECE,6.0,30.0
 14,Candle Dye Color Liquid,"32 different colors, 10ml/bottle",160,BOTTLE,0.84,134.4
@@ -44,8 +44,10 @@ fragrances_df['Scent Name'] = fragrances_df['Description'].str.replace("Scents: 
 fragrances_df['Display Label'] = fragrances_df['Scent Name'] + " ($" + fragrances_df['Unit Price'].astype(str) + "/kg)"
 
 waxes_df = df[df['Product Name'].str.contains("Wax") & ~df['Product Name'].str.contains("Melter|Cup")]
+waxes_df['Display Label'] = waxes_df['Product Name'] + " ($" + waxes_df['Unit Price'].astype(str) + "/kg)"
 wicks_df = df[df['Product Name'].str.contains("Wick") & ~df['Product Name'].str.contains("Holder|Sticker")]
 sticker_row = df[df['Item No'] == 11].iloc[0]
+STICKERS_PER_SHEET = 20
 
 # --- 3. UI LAYOUT ---
 st.title("🕯️ Calculateur de Coût de Bougies")
@@ -55,8 +57,8 @@ col_sel1, col_sel2, col_sel3 = st.columns(3)
 
 with col_sel1:
     st.subheader("1. Choisir la Cire")
-    wax_choice = st.selectbox("Type de Cire", waxes_df['Product Name'].unique(), index=0)
-    wax_row = waxes_df[waxes_df['Product Name'] == wax_choice].iloc[0]
+    wax_choice_label = st.selectbox("Type de Cire", waxes_df['Display Label'].unique(), index=0)
+    wax_row = waxes_df[waxes_df['Display Label'] == wax_choice_label].iloc[0]
 
 with col_sel2:
     st.subheader("2. Choisir le Parfum")
@@ -97,13 +99,11 @@ with col_load_info:
         st.error(f"🛑 **{fragrance_load}% est Risqué.** Plus de 10% peut faire couler l'huile hors de la bougie.")
 
 # Jar Settings
-col_jar1, col_jar2, col_jar3 = st.columns(3)
+col_jar1, col_jar2 = st.columns(2)
 with col_jar1:
     jar_size = st.number_input("Taille du Pot de Bougie (grammes de cire)", value=200, step=10)
 with col_jar2:
     wax_amount_kg = st.number_input("Quantité de Cire (kg)", value=1.0, min_value=0.1, max_value=10.0, step=0.1)
-with col_jar3:
-    include_sticker = st.checkbox("Inclure le coût des autocollants de mèche ?", value=True)
 
 # --- CALCULATIONS ---
 WAX_AMOUNT_KG = wax_amount_kg
@@ -115,7 +115,7 @@ total_mixture_g = (WAX_AMOUNT_KG + fragrance_weight_kg) * 1000
 num_candles = int(total_mixture_g / jar_size)
 
 cost_wicks = num_candles * wick_row['Unit Price']
-cost_stickers = (num_candles * sticker_row['Unit Price']) if include_sticker else 0.0
+cost_stickers = (num_candles / STICKERS_PER_SHEET) * sticker_row['Unit Price']
 
 total_batch_cost = cost_wax + cost_fragrance + cost_wicks + cost_stickers
 cost_per_candle = total_batch_cost / num_candles if num_candles > 0 else 0.0
@@ -124,17 +124,18 @@ cost_per_candle = total_batch_cost / num_candles if num_candles > 0 else 0.0
 st.divider()
 st.markdown(f"### 📊 Résultats : {scent_row['Scent Name']}")
 
-m1, m2, m3, m4 = st.columns(4)
+m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Coût Total du Lot", f"${total_batch_cost:.2f}")
-m2.metric("Coût par Bougie", f"${cost_per_candle:.2f}")
-m3.metric("Bougies Produites", f"{num_candles}")
-m4.metric("Parfum Utilisé", f"{fragrance_weight_kg*1000:.0f} g")
+m2.metric("Coût par Bougie FOB", f"${cost_per_candle:.2f}")
+m3.metric("Coût par Bougie PRV DH HT", f"{cost_per_candle*17:.2f} DH")
+m4.metric("Bougies Produites", f"{num_candles}")
+m5.metric("Parfum Utilisé", f"{fragrance_weight_kg*1000:.0f} g")
 
 # Breakdown Table
 breakdown_df = pd.DataFrame({
-    "Article": [wax_row['Product Name'], f"Huile : {scent_row['Scent Name']}", "Mèches", "Autocollants"],
-    "Prix Unitaire": [f"${wax_row['Unit Price']}/kg", f"${scent_row['Unit Price']}/kg", f"${wick_row['Unit Price']:.4f}/pc", f"${sticker_row['Unit Price']:.3f}/pc"],
-    "Quantité": [f"{WAX_AMOUNT_KG:.1f} kg", f"{fragrance_weight_kg*1000:.1f} g", f"{num_candles} pcs", f"{num_candles} pcs" if include_sticker else "0"],
+    "Article": [wax_row['Product Name'], f"Huile : {scent_row['Scent Name']}", "Mèches", "Feuilles d'Autocollants"],
+    "Prix Unitaire": [f"${wax_row['Unit Price']}/kg", f"${scent_row['Unit Price']}/kg", f"${wick_row['Unit Price']:.4f}/pc", f"${sticker_row['Unit Price']:.3f}/feuille"],
+    "Quantité": [f"{WAX_AMOUNT_KG:.1f} kg", f"{fragrance_weight_kg*1000:.1f} g", f"{num_candles} pcs", f"{(num_candles/STICKERS_PER_SHEET):.1f} feuilles"],
     "Coût": [f"${cost_wax:.2f}", f"${cost_fragrance:.2f}", f"${cost_wicks:.2f}", f"${cost_stickers:.2f}"]
 })
 st.table(breakdown_df)
@@ -147,7 +148,7 @@ st.caption("Basé sur le Guide PDF utilisant la Cire de Soja")
 with st.expander("Étape 1 : Préparation (Avant de commencer)", expanded=True):
     st.markdown(f"""
     1.  **Nettoyer & Sécher :** Assurez-vous que vos **{num_candles}** conteneurs sont propres et secs.
-    2.  **Mèche :** Attachez la mèche ({wick_row['Description']}) au centre du conteneur en utilisant un autocollant de mèche ou de la colle.
+    2.  **Mèche :** Attachez la mèche ({wick_row['Description']}) au centre du conteneur en utilisant un point d'autocollant de mèche ou de la colle.
     3.  **Fixer :** Utilisez un support de mèche pour maintenir la mèche droite.
     """)
 
